@@ -1,4 +1,4 @@
-describe("UI Pre-Commit Test", function() {
+describe("UI Test", function() {
   beforeEach(function() {
     cy.visit("/");
   });
