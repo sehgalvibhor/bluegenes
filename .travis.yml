@@ -11,3 +11,4 @@ script:
   - npm install
   - lein less once
   - lein cljsbuild once min
+  - (npm bin)/cypress run --record

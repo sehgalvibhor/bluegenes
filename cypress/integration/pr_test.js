@@ -3,7 +3,80 @@ describe("UI Pre-Commit Test", function() {
     cy.visit("/");
   });
 
-  it("Visits Website and Logs in using Dummy details", function() {
+  it("Upload page resolved IDs as expected", function() {
+    cy.server();
+    cy.route("POST", "*/service/ids").as("uploadData");
+    cy.contains("Upload").click();
+    cy.url().should("include", "/upload/input");
+    cy.contains("Example").click();
+    cy.get("button")
+      .contains("Continue")
+      .click();
+    cy.url().should("include", "/upload/save");
+    cy.wait("@uploadData");
+    cy.get("@uploadData").should(xhr => {
+      expect(xhr.status).to.equal(200);
+    });
+  });
+
+  it("Templates execute and show results", function() {
+    cy.get("#bluegenes-main-nav").within(() => {
+      cy.contains("Templates").click();
+    });
+    cy.url().should("include", "/templates");
+    cy.get("div[class=template-list]").within(() => {
+      cy.get(":nth-child(n) > .col")
+        .its("length")
+        .should("be.gt", 0);
+    });
+  });
+
+  it("Templates allow you to select lists and type in identifiers", function() {
+    cy.server();
+    cy.route("POST", "*/service/query/results/tablerows").as("getData");
+    cy.get("#bluegenes-main-nav").within(() => {
+      cy.contains("Templates").click();
+    });
+    cy.url().should("include", "/templates");
+    cy.get("div[class=template-list]").within(() => {
+      cy.get(":nth-child(n) > .col")
+        .its("length")
+        .should("be.gt", 0);
+    });
+    cy.get("div[class=template-list]").within(() => {
+      cy.get(":nth-child(2) > .col")
+        .find("button")
+        .contains("View >>")
+        .click({ force: true });
+    });
+    cy.wait("@getData");
+    cy.get("@getData").should(xhr => {
+      expect(xhr.status).to.equal(200);
+    });
+    cy.get("select[class=form-control]").select("!=");
+  });
+
+  it("Perform a region search using existing example", function() {
+    cy.server();
+    cy.route("POST", "*/service/query/results").as("getData");
+    cy.contains("Regions").click();
+    cy.get(".guidance")
+      .contains("[Show me an example]")
+      .click();
+    cy.get(".region-text > .form-control").should("not.be.empty");
+    cy.get("button")
+      .contains("Search")
+      .click();
+    cy.wait("@getData");
+    cy.get("@getData").should(xhr => {
+      expect(xhr.status).to.equal(200);
+    });
+    cy.get(".results-summary").should("have", "Results");
+  });
+
+  it("Login and logout works", function() {
+    cy.server();
+    cy.route("POST", "/api/auth/login").as("auth");
     cy.get("#bluegenes-main-nav").within(() => {
       cy.get("ul")
         .find("li.dropdown.mine-settings.secondary-nav")
@@ -17,42 +90,10 @@ describe("UI Pre-Commit Test", function() {
     cy.get("form")
       .find("button")
       .click();
-    cy.contains("demo@intermine.org"); //Use assertion statement here
-  });
-
-  it("Perform a region search using existing example", function() {
-    cy.server();
-    cy.route("POST", "*/service/query/results").as("getData");
-    cy.contains("Regions").click();
-    cy.get(".guidance")
-      .contains("[Show me an example]")
-      .click();
-    cy.get(".region-text > .form-control").should("not.be.empty");
-    cy.get("button")
-      .contains("Search")
-      .click();
-    cy.wait("@getData");
-    cy.get("@getData").should(xhr => {
-        expect(xhr.status).to.equal(200);
+    cy.wait("@auth");
+    cy.get("@auth").should(xhr => {
+      expect(xhr.status).to.equal(200);
     });
-    cy.get(".results-summary").should("have", "Results");
-  });
-
-  it("Perform a region search using existing example", function() {
-    cy.server();
-    cy.route("POST", "*/service/query/results").as("getData");
-    cy.contains("Regions").click();
-    cy.get(".guidance")
-      .contains("[Show me an example]")
-      .click();
-    cy.get(".region-text > .form-control").should("not.be.empty");
-    cy.get("button")
-      .contains("Search")
-      .click();
-    cy.wait("@getData");
-    cy.get("@getData").should(xhr => {
-        expect(xhr.status).to.equal(200);
-    });
-    cy.get(".results-summary").should("have", "Results");
+    cy.contains("demo@intermine.org");
   });
 });
