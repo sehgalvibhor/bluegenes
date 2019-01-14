@@ -12,4 +12,4 @@ script:
   - npm install
   - lein less once
   - lein cljsbuild once min
-  - awesome_bot README.md,CONTRIBUTING.md,docs/*.md --allow-dupe --allow-redirect
+  - awesome_bot docs/*.md --allow-dupe --allow-redirect
